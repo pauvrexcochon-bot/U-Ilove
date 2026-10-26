@@ -4,7 +4,7 @@
   var VAPID_PUBLIC = 'BKN_ouxQ0NgRLHCT3PkK2xAnaWPBArcnxMskx8Zlj2K1UYkn_1NA3p6EeQCIWwaffuHmyECzz1JrPxQV828ddgE';
   /* Si le site est sur Netlify : laisse tel quel.
      Si le site est sur GitHub Pages : mets l'adresse complète, ex. 'https://ma-fonction.netlify.app/.netlify/functions/push' */
-  var FN_URL = '/.netlify/functions/push';
+  var FN_URL = 'https://dazzling-horse-f6d13a.netlify.app/.netlify/functions/push';
 
   if (VAPID_PUBLIC.indexOf('COLLE') === 0) return;
   if (!('serviceWorker' in navigator) || !('PushManager' in window) || !window.firebase || !firebase.apps.length) return;
