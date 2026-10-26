@@ -2,5 +2,5 @@
   publish = "."
 
 [functions]
-  directory = "netlify/functions"
+  directory = "netlify/fonctions"
   node_bundler = "esbuild"
