@@ -3971,7 +3971,8 @@ textarea{ overflow-y:auto; }
   async function sendFileMsg(f) {
     var chat = state.chat;
     if (!state.me || !chat || ta.disabled) return;
-    showErr(''); state.stick = true;
+    showErr(''); state.stick = true;  
+    if (cntEl) { cntEl.hidden = false; cntEl.textContent = 'Envoi du fichier…'; }
     var name = String(f.name || 'fichier').slice(0, 120), mt = f.type || '';
     var aud = isAudioFile({ n: name, mt: mt }), label = (aud ? '🎵 ' : '📎 ') + name;
     var chatRef = fs.collection('chats').doc(chat.id), file;
