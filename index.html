@@ -3403,7 +3403,7 @@ textarea{ overflow-y:auto; }
     LP.fired = false; lpCancel();
     if (ev.pointerType === 'mouse' && ev.button !== 0) return;
     var t = ev.target, b = t.closest && t.closest('.bubble');
-    if (!b || t.closest('button, input')) return;
+    if (!b || (t.closest('button, input') && !t.closest('.fcard'))) return;
     var row = b.closest('.row');
     if (!row) return;
     LP.x = ev.clientX; LP.y = ev.clientY; LP.row = row; row.classList.add('pressing');
@@ -3671,7 +3671,7 @@ textarea{ overflow-y:auto; }
   });
 
   /* ---------- réactions et modification de messages ---------- */
-  var RX = ['❤️', '👍', '😂', '😮', '😢', '🙏'];
+  var RX = ['❤️', '👍', '😆', '😒', '😭', '🤢'];
   function reactionsOf(m) {
     var out = {}, l = m.likes, r = m.reacts;
     if (l && typeof l === 'object') Object.keys(l).forEach(function (k) { if (l[k] === true) out[k] = RX[0]; });
@@ -3699,7 +3699,7 @@ textarea{ overflow-y:auto; }
       box.appendChild(b);
     });
     if (canEdit) {
-      var eb = el('button', 'edit pedit', '✏️ Modifier');
+      var eb = el('button', 'edit pedit', ' Modifier');
       eb.type = 'button';
       box.appendChild(eb);
     }
@@ -3941,6 +3941,7 @@ textarea{ overflow-y:auto; }
     b.appendChild(ico); b.appendChild(tx); box.appendChild(b);
     b.addEventListener('click', function (ev) {
       ev.stopPropagation();
+      if (LP.fired) { LP.fired = false; return; }
       var au = box.querySelector('audio');
       if (au) { if (au.paused) au.play().catch(function () {}); else au.pause(); return; }
       sub.textContent = 'Chargement…';
@@ -6463,7 +6464,7 @@ textarea{ overflow-y:auto; }
   }
   function nwCount(o) { var n = 0, k; o = o || {}; for (k in o) { if (o[k]) n++; } return n; }
   /* réactions (plusieurs emojis) sur les lettres et les commentaires */
-  var NWRX = ['❤️', '😂', '😮', '😢', '👍', '🔥'];
+  var NWRX = ['❤️', '😆', '😮', '😭', '👍', '🔥'];
   function nwRxOf(o) {
     var out = {}, l = o.likes, r = o.reacts;
     if (l && typeof l === 'object') Object.keys(l).forEach(function (k) { if (l[k] === true) out[k] = NWRX[0]; });
