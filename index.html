@@ -1553,6 +1553,13 @@ textarea{ overflow-y:auto; }
     </div>
     <p class="err" id="photoErr" hidden></p>
   </div>
+       <div class="sec">
+    <p class="lbl">Mon nom</p>
+    <input class="field" id="myNickIn" type="text" maxlength="24" placeholder="Nouveau nom" autocomplete="off" aria-label="Nouveau nom">
+    <p class="err" id="myNickErr" hidden></p>
+    <div class="pfrow" style="margin-top:8px"><button class="ghost" id="myNickGo" type="button">Changer mon nom</button></div>
+    <p class="hint" id="myNickHint">Tu peux changer ton nom une fois tous les 7 jours.</p>
+       </div>
   <div class="sec">
     <p class="lbl">Style</p>
     <div class="seg" id="skinSeg">
@@ -3656,10 +3663,43 @@ textarea{ overflow-y:auto; }
     $('#photoErr').hidden = true;
     paintPhoto($('#setAvatar'), state.me, state.username);
     loadPhoto(state.me);
-    applyMode();
+        applyMode();
+    paintNick();
     setDlg.showModal();
   });
   $('#setClose').addEventListener('click', function () { setDlg.close(); });
+       /* ---------- changer mon nom : une fois tous les 7 jours ---------- */
+  var NICK_WAIT = 7 * 86400000;
+  function nickLeft() { return Math.max(0, (state.nickAt || 0) + NICK_WAIT - Date.now()); }
+  function paintNick() {
+    var left = nickLeft(), h = $('#myNickHint'), b = $('#myNickGo'), i = $('#myNickIn');
+    i.placeholder = cap(myName());
+    if (left > 0) {
+      var d = Math.ceil(left / 86400000);
+      h.textContent = 'Prochain changement possible dans ' + d + ' jour' + (d > 1 ? 's' : '') + '.';
+      b.disabled = true; i.disabled = true;
+    } else {
+      h.textContent = 'Tu peux changer ton nom une fois tous les 7 jours.';
+      b.disabled = false; i.disabled = false;
+    }
+  }
+  $('#myNickGo').addEventListener('click', function () {
+    var err = $('#myNickErr'), n = $('#myNickIn').value.replace(/\s+/g, ' ').trim();
+    err.hidden = true;
+    if (nickLeft() > 0) { paintNick(); return; }
+    if (n.length < 2 || n.length > 24) { err.textContent = 'Le nom doit faire entre 2 et 24 caractères.'; err.hidden = false; return; }
+    if (n.toLowerCase() === String(myName()).toLowerCase()) { err.textContent = 'C’est déjà ton nom.'; err.hidden = false; return; }
+    var now = Date.now();
+    state.nick = n; state.nickAt = now;
+    store('uandi-nick-' + state.me, JSON.stringify({ n: n, t: now }));
+    writePresence({ nick: n, nickAt: now });
+    state.chats.forEach(function (c) {
+      var upd = {}; upd['names.' + state.me] = n;
+      fs.collection('chats').doc(c.id).update(upd).catch(function () {});
+    });
+    $('#myNickIn').value = '';
+    renderList(); paintNick();
+  });
   $('#photoPick').addEventListener('click', function () { $('#photoFile').click(); });
   $('#photoDel').addEventListener('click', function () { savePhoto(null); });
   $('#photoFile').addEventListener('change', function (e) {
@@ -7193,7 +7233,8 @@ textarea{ overflow-y:auto; }
     state.me = user.uid;
     state.deleting = false;
     state.username = String(user.email || '').split('@')[0];
-    state.nick = '';
+    state.nick = ''; state.nickAt = 0;
+    try { var nk = JSON.parse(store('uandi-nick-' + user.uid) || 'null'); if (nk) { state.nick = String(nk.n || ''); state.nickAt = +nk.t || 0; } } catch (e) {}
     state.chats = []; state.chatsById = {}; state.chatsLoaded = false; knownTs = {};
     loginEl.hidden = true;
     appEl.hidden = false;
