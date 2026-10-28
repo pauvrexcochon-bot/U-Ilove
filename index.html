@@ -2767,7 +2767,7 @@ textarea{ overflow-y:auto; }
       });
       list.sort(function (a, b) { return a.ts - b.ts || (a.id < b.id ? -1 : 1); });
       cleanOld(id, list);
-      state.more = list.length >= state.lim;
+      state.more = snap.size >= state.lim;
       var fresh = (firstLoad || paging) ? [] : list.filter(function (m) { return !before.has(m.id) && m.uid !== state.me; });
       var away = !nearBottom();
       state.msgs = list;
