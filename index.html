@@ -9000,10 +9000,11 @@ html body .row.open .meta .del{ color:var(--danger); }
     if(o){ var t=$('#nwText'); if(t) setTimeout(function(){ t.focus(); },120); }
   });
   function sync(){
-    var vl=$('#viewList'), vn=$('#viewNews'), pf=$('#nwPaneFeed');
-    fl.classList.toggle('on', !!vl && !vl.hidden);
-    if(!(vl && !vl.hidden)) closeMenu();
-    fn.classList.toggle('on', !!vn && !vn.hidden && !!pf && !pf.hidden);
+        var vl=$('#viewList'), vn=$('#viewNews'), pf=$('#nwPaneFeed'), ap=$('#app'), lg=$('#login');
+    var inApp = !!ap && !ap.hidden && !!lg && lg.hidden;
+    fl.classList.toggle('on', inApp && !!vl && !vl.hidden);
+    if(!(inApp && vl && !vl.hidden)) closeMenu();
+    fn.classList.toggle('on', inApp && !!vn && !vn.hidden && !!pf && !pf.hidden);
   }
   new MutationObserver(sync).observe(document.body,{attributes:true,attributeFilter:['hidden'],subtree:true});
   sync();
