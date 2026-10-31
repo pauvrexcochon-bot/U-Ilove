@@ -1,3 +1,9 @@
+/* U&I — config.js : clés Firebase, push, récupération (à modifier ici) */
+
+/* U&I — js/boot/vibrate-guard.js
+   Protège navigator.vibrate (évite les erreurs sur les navigateurs qui le bloquent) */
+try{var _v=navigator.vibrate;if(_v)navigator.vibrate=function(){try{return _v.apply(navigator,arguments)}catch(e){return false}}}catch(e){}
+
 /* U&I — js/config.js
    Configuration : Firebase, domaine des comptes, push (VAPID + Worker) */
 window.APP_CONFIG = {
