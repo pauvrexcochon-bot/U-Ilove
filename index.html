@@ -2849,6 +2849,25 @@ html body #settings .nsw:focus-visible{outline:2px solid var(--accent);outline-o
    Connexion / inscription, présence
    (fait partie de l’appli : assemblée par js/boot/loader.js dans une seule fermeture) */
   /* ---------- connexion / inscription ---------- */
+     /* limite des essais de mot de passe (par appareil) */
+  function lkGet(k) { try { return JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) { return {}; } }
+  function lkSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function lkLeft(name) {
+    var now = Date.now(), r = 0;
+    ['uandi-lk-' + name, 'uandi-lk-all'].forEach(function (k) { var o = lkGet(k); if (o.until && o.until > now) r = Math.max(r, o.until - now); });
+    return r;
+  }
+  function lkFail(name) {
+    var now = Date.now();
+    [['uandi-lk-' + name, 5], ['uandi-lk-all', 12]].forEach(function (a) {
+      var o = lkGet(a[0]); if (!o.t || now - o.t > 24 * 3600 * 1000) o = { n: 0 };
+      o.n++; o.t = now;
+      if (o.n >= a[1]) o.until = now + Math.min(30, Math.pow(2, o.n - a[1])) * 60000;
+      lkSet(a[0], o);
+    });
+  }
+  function lkOk(name) { try { localStorage.removeItem('uandi-lk-' + name); localStorage.removeItem('uandi-lk-all'); } catch (e) {} }
+  function lkText(ms) { var m = Math.ceil(ms / 60000); return m <= 1 ? '1 minute' : m + ' minutes'; }
   function setMode(mode) {
     state.mode = mode;
     var signup = mode === 'signup';
@@ -2874,14 +2893,23 @@ html body #settings .nsw:focus-visible{outline:2px solid var(--accent);outline-o
       if (!NAME_RE.test(name)) { setAuthErr('Nom d’utilisateur : 3 à 20 caractères, avec lettres, chiffres, point, tiret ou souligné.'); return; }
       if (pass.length < 6) { setAuthErr('Le mot de passe doit faire au moins 6 caractères.'); return; }
       if (pass !== $('#p2').value) { setAuthErr('Les deux mots de passe ne sont pas identiques.'); return; }
-    } else if (!name || !pass) return;
+    } else {
+  if (!name || !pass) return;
+  var wait = lkLeft(name);
+  if (wait > 0) { setAuthErr('Trop d’essais. Réessaie dans ' + lkText(wait) + '.'); return; }
+}
 
     authBtn.disabled = true;
     var email = name + '@' + CFG.emailDomain;
     apNew = signup;
-    var p = signup ? auth.createUserWithEmailAndPassword(email, pass) : auth.signInWithEmailAndPassword(email, pass);
+        var p = signup ? auth.createUserWithEmailAndPassword(email, pass) : auth.signInWithEmailAndPassword(email, pass).then(function (cr) { lkOk(name); return cr; });
     p.catch(function (e) {
       var c = e && e.code;
+         if (!signup && /^auth\/(wrong-password|invalid-credential|invalid-login-credentials|user-not-found)$/.test(c || '')) {
+        lkFail(name);
+        var w = lkLeft(name);
+        if (w > 0) { setAuthErr('Trop d’essais. Réessaie dans ' + lkText(w) + '.'); return; }
+      }
       setAuthErr(
         c === 'auth/email-already-in-use' ? 'Ce nom d’utilisateur est déjà pris.' :
         c === 'auth/weak-password' ? 'Le mot de passe doit faire au moins 6 caractères.' :
